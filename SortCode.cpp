@@ -7,7 +7,7 @@ class cells {
 	vector <float> cellsCap; //Список емкостей ячеек
 	int S, P; //S - Последовательно P - Параллельно
 public:
-	void cellsCapinput(vector <float> cellsCapinp, const int &Sinp, const int &Pinp) {
+	void cellsCapinput(vector <float> cellsCapinp, const int& Sinp, const int& Pinp) {
 		S = Sinp;
 		P = Pinp;
 
@@ -16,7 +16,7 @@ public:
 	}
 
 	/*void sortcells() { //Сортировка ячеек в парралели методом балансировеи поледних элементов, не рабочее г*вно
-		vector <float> reversedVec, sortedVec; //reversedVec - развернутый массив, sortedVec - сборный отсортированный массив 
+		vector <float> reversedVec, sortedVec; //reversedVec - развернутый массив, sortedVec - сборный отсортированный массив
 
 		sort(cellsCap.begin(), cellsCap.end());
 		reversedVec = cellsCap;
@@ -73,20 +73,36 @@ public:
 		vector <float> sortedVec; //Сборный отсортированный (в конце) массив
 		double midCap;
 		long double midTmp = 0;
-		int Counter;
 
-		for (int i = 0; i < S * P; ++i) midTmp += cellsCap[cellsCap.size() - i]; //среднее значение
+		for (int i = 0; i < S * P; ++i) midTmp += cellsCap[cellsCap.size() - i - 1]; //среднее значение
 		midCap = midTmp / S;
+		cout << endl << midCap << endl;
 
-		for (int i = 0; i < S * P; i += P) {
-			Counter = 1;
-			for (int k = i + 1; k < i+P; ++k) {
-				Counter++;
-				if (cellsCap[k - 1] + cellsCap[k] > midCap / Counter) {
-					
+		float tmp;
+		for (int i = 0; i < S * P; i += P) { //Перебор блоков, ход по P
+			tmp = 0;
+			sortedVec.push_back(cellsCap[cellsCap.size() - 1]); //Вставка 
+			tmp += cellsCap[cellsCap.size() - 1];
+			cellsCap.pop_back(); //удаление его из cellsCap
+			for (int k = P - 1; k > 0; --k) { //Перебор элементов в блоке
+				for (int j = cellsCap.size() - 1; j >= -1; --j) { //j - перебор элементов для cellsCap
+					if (j == -1) {
+						sortedVec.push_back(cellsCap[0]);
+						tmp += cellsCap[0];
+						cellsCap.erase(cellsCap.begin());
+						break;
+					}
+					if (tmp + cellsCap[j] <= midCap / k) {
+						sortedVec.push_back(cellsCap[j]);
+						tmp += cellsCap[j];
+						cellsCap.erase(cellsCap.begin() + j);
+						break;
+					}
 				}
+
 			}
 		}
+		cellsCap = sortedVec;
 	}
 	void cellslistoutput() { //вывод массива в консоль
 		float bSumm = 0;
@@ -99,6 +115,7 @@ public:
 			cout << bSumm;
 			bSumm = 0;
 		}
+		//for (int i = 0; i < cellsCap.size(); ++i) cout << cellsCap[i] << " ";
 	}
 };
 
