@@ -11,7 +11,7 @@ public:
 		S = Sinp;
 		P = Pinp;
 
-		sort(cellsCapinp.begin(), cellsCapinp.end());
+		sort(cellsCapinp.rbegin(), cellsCapinp.rend());
 		for (int i = 0; i < S * P; ++i) cellsCap.push_back(cellsCapinp[i]);
 	}
 
@@ -69,12 +69,12 @@ public:
 		}
 	} */
 
-	void sortcells() { //Сортировка ячеек в параллели методом подбора ближайшей суммы емкости парралели к средней емкости
+	/*void sortcells() { //Сортировка ячеек в параллели методом подбора ближайшей суммы емкости парралели к средней емкости
 		vector <float> sortedVec; //Сборный отсортированный (в конце) массив
 		double midCap;
 		long double midTmp = 0;
 
-		for (int i = 0; i < S * P; ++i) midTmp += cellsCap[cellsCap.size() - i - 1]; //среднее значение
+		for (int i = 0; i < S * P; ++i) midTmp += cellsCap[i]; //среднее значение
 		midCap = midTmp / S;
 		cout << endl << midCap << endl;
 
@@ -85,37 +85,100 @@ public:
 			tmp += cellsCap[cellsCap.size() - 1];
 			cellsCap.pop_back(); //удаление его из cellsCap
 			for (int k = P - 1; k > 0; --k) { //Перебор элементов в блоке
-				for (int j = cellsCap.size() - 1; j >= -1; --j) { //j - перебор элементов для cellsCap
-					if (j == -1) {
-						sortedVec.push_back(cellsCap[0]);
-						tmp += cellsCap[0];
-						cellsCap.erase(cellsCap.begin());
+				for (int j = 1; j <= cellsCap.size(); ++j) { //j - перебор элементов для cellsCap
+					if (j == cellsCap.size()) {
+						sortedVec.push_back(cellsCap[cellsCap.size() - 1]);
+						tmp += cellsCap[cellsCap.size() - 1];
+						cellsCap.erase(cellsCap.begin() + cellsCap.size() - 1);
 						break;
 					}
-					if (tmp + cellsCap[j] <= midCap / k) {
-						sortedVec.push_back(cellsCap[j]);
-						tmp += cellsCap[j];
-						cellsCap.erase(cellsCap.begin() + j);
+					if (tmp + cellsCap[j] >= midCap / k) { //Посмотреть midcap
+						sortedVec.push_back(cellsCap[j - 1]);
+						tmp += cellsCap[j - 1];
+						cellsCap.erase(cellsCap.begin() + j - 1);
 						break;
-					}
+					} 
 				}
-
 			}
 		}
 		cellsCap = sortedVec;
-	}
+	} */
+
+	/*void sortcells() { //Сортировка ячеек в параллели методом подбора ближайшей суммы емкости парралели к средней емкости //выставить rbegin rend во вводе
+		double midCap;
+		long double midTmp = 0;
+
+		for (int i = 0; i < S * P; ++i) midTmp += cellsCap[i]; //среднее значение
+		midCap = midTmp / S;
+		cout << endl << midCap << endl;
+	
+		int count = 0;
+		float parCap = 0, tmpCap;
+		int localP = P;
+		for (int i = 0; i < S * P; ++i) { //Перебор массива ячеек
+			if (count == P) count = 0, parCap = 0;
+			++count;
+
+			sort(cellsCap.rbegin(), cellsCap.rend() - i);
+
+			if (count == 1) {
+				parCap += cellsCap[i];
+			}
+			else {
+				tmpCap = cellsCap[i];
+				auto expl = [midCap, parCap, count, localP](float i) {return i + parCap <= midCap / (localP + 1 - count); };
+				auto out = find_if(cellsCap.begin() + i, cellsCap.end(), expl);
+
+				(out != cellsCap.end())
+					? cellsCap[i] = *out, cellsCap[distance(cellsCap.begin(), out)] = tmpCap, parCap += cellsCap[i]
+					: cellsCap[i] = cellsCap[cellsCap.size() - 1], cellsCap[cellsCap.size() - 1] = tmpCap, parCap += cellsCap[i];
+			}
+		}
+	} */
+	
+	void sortcells() { //Сортировка ячеек в параллели методом подбора ближайшей суммы емкости парралели к средней емкости //выставить rbegin rend во вводе
+		double midCap;
+		long double midTmp = 0;
+
+		for (int i = 0; i < S * P; ++i) midTmp += cellsCap[i]; //среднее значение
+		midCap = midTmp / S;
+		cout << endl << midCap << endl;
+
+		int count = 0;
+		float parCap = 0, tmpCap;
+		int localP = P;
+		for (int i = 0; i < S * P; ++i) { //Перебор массива ячеек
+			if (count == P) count = 0, parCap = 0;
+			++count;
+
+			sort(cellsCap.rbegin(), cellsCap.rend() - i);
+
+			if (count == 1) {
+				parCap += cellsCap[i];;
+			}
+			else {
+				tmpCap = cellsCap[i];
+				auto expl = [midCap, parCap, count, localP](float i) {return i + parCap <= midCap / (localP + 1 - count); };
+				auto out = find_if(cellsCap.begin() + i, cellsCap.end(), expl);
+
+				(out != cellsCap.end())
+					? cellsCap[i] = *out, cellsCap[distance(cellsCap.begin(), out)] = tmpCap, parCap += cellsCap[i]
+					: cellsCap[i] = cellsCap[cellsCap.size() - 1], cellsCap[cellsCap.size() - 1] = tmpCap, parCap += cellsCap[i];
+			}
+		}
+	} 
+
 	void cellslistoutput() { //вывод массива в консоль
 		float bSumm = 0;
 		for (int i = 1; i <= S; ++i) {
-			cout << endl << i << " ";
+			cout << endl << "Блок№" << i << " |";
 			for (int k = P * (i - 1); k < P * i; ++k) {
 				cout << cellsCap[k] << ' ';
 				bSumm += cellsCap[k];
 			}
-			cout << bSumm;
+			cout << "|total=" << bSumm;
 			bSumm = 0;
-		}
-		//for (int i = 0; i < cellsCap.size(); ++i) cout << cellsCap[i] << " ";
+		} 
 	}
 };
 
