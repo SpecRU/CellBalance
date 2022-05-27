@@ -8,6 +8,7 @@ using namespace std;
 class cells {
 	vector <double> cellsCap; //Список емкостей ячеек
 	vector <double> blockSum; //Емкость блоков
+	vector <double> blockDiff; //Разница относительно медианы
 	int S, P; //S - Последовательно P - Параллельно
 public:
 	void Cellsinput(vector <double> cellsCapinp, const int& Sinp, const int& Pinp) {
@@ -51,59 +52,13 @@ public:
 				fout << cellsCap[k] << ' ';
 
 			}
-			fout << "Всего:" << blockSum[i] << "|" << tmp << endl;
+			fout << "Всего:" << tmp << " Разница:" << blockDiff[i] << endl;
 		}
 
 		fout.close();
 	}
 
-void sortcells() { //Сортировка ячеек в параллели методом подбора ближайшей суммы емкости парралели к средней емкости
-	sort(cellsCap.begin(), cellsCap.end());
-
-	vector <double> sortedVec, tmpVec;  //Сборный отсортированный (в конце) массив
-	double midCap;
-	long double midTmp = 0;
-
-	for (int i = 0; i < S * P; ++i) midTmp += cellsCap[i]; //среднее значение
-	midCap = midTmp / S;
-
-	for (int k = 0; k < cellsCap.size(); ++k) {
-		tmpVec.push_back(cellsCap[cellsCap.size() - 1]);
-		cellsCap.pop_back();
-	}
-
-	for (int i = P; i > 0; --i) { //Перебор параллелей, ход по S
-		for (int k = 0; k < S; ++k) {
-			cellsCap.push_back(tmpVec[0]);
-			tmpVec.erase(tmpVec.begin());
-		}
-		for (int k = 0; k < S; ++k) { //Перебор элементов по вертикали
-			/*if (i == P) {
-				sortedVec.push_back(cellsCap[0]);
-				blockSum[k] += cellsCap[0];
-				cellsCap.erase(cellsCap.begin());
-				continue;
-			}*/
-			for (int j = cellsCap.size() - 1; j >= 0; --j) { //Перебор элементов для параллелей
-				if (j == 0) {
-					sortedVec.push_back(cellsCap[0]);
-					blockSum[k] += cellsCap[0];
-					cellsCap.erase(cellsCap.begin());
-					break;
-				}
-				if (blockSum[k] + cellsCap[j] >= midCap / i) {
-					sortedVec.push_back(cellsCap[j]);
-					blockSum[k] += cellsCap[j];
-					cellsCap.erase(cellsCap.begin() + j);
-					break;
-				} 
-			}
-		} 
-	}
-	cellsCap = sortedVec;
-} 
-
-void Cellsconsoutput() { //вывод массива в консоль
+	void Cellsconsoutput() { //вывод массива в консоль
 	/*for (int i = 0; i < S; ++i) {
 		cout << endl << "Блок№" << i + 1 << " |";
 		for (int k = i; k < cellsCap.size(); k += S) {
@@ -112,10 +67,68 @@ void Cellsconsoutput() { //вывод массива в консоль
 		}
 		cout << "|total=" << blockSum[i];
 	} */
-	for (int k = 0; k < cellsCap.size(); k++) {
-		cout << cellsCap[k] << ' ';
+		for (int k = 0; k < cellsCap.size(); k++) {
+			cout << cellsCap[k] << ' ';
+		}
 	}
-}
+
+	void sortcells() { //Сортировка ячеек в параллели методом подбора ближайшей суммы емкости парралели к средней емкости
+		sort(cellsCap.rbegin(), cellsCap.rend());
+
+		vector <double> sortedVec;  //Сборный отсортированный (в конце) массив
+		double midCap;
+		long double midTmp = 0;
+
+		for (int i = 0; i < S * P; ++i) midTmp += cellsCap[i]; //среднее значение
+		midCap = midTmp / S;
+
+		cout << midCap;
+
+		for (int i = P; i > 0; --i) { //Перебор параллелей, ход по S
+			for (int k = 0; k < S; ++k) { //Перебор элементов по вертикали
+				if (i == P) {
+					sortedVec.push_back(cellsCap[0]);
+					blockSum[k] += cellsCap[0];
+					cellsCap.erase(cellsCap.begin());
+					continue;
+				}
+				for (int j = cellsCap.size() - 1; j >= 0; --j) { //Перебор элементов для параллелей
+					if (j == 0) {
+						sortedVec.push_back(cellsCap[0]);
+						blockSum[k] += cellsCap[0];
+						cellsCap.erase(cellsCap.begin());
+						break;
+					}
+					if (blockSum[k] + cellsCap[j] >= midCap / i) {
+						sortedVec.push_back(cellsCap[j]);
+						blockSum[k] += cellsCap[j];
+						cellsCap.erase(cellsCap.begin() + j);
+						break;
+					}
+				}
+			}
+		}
+		for (int i = 0; i < S; ++i) blockDiff.push_back(blockSum[i] - midCap);
+
+		int tmp;
+		for (int i = 0; i < S; ++i) { //Переключение блоков
+			for (int k = i; k < cellsCap.size(); k += S) { //Переключение ячеек
+				for (int j = 0; j < S; ++j) { //Переключение блоков
+					for (int t = j; t < cellsCap.size(); t += S) { //Переключение ячеек
+						if (cellsCap[k] - cellsCap[t] <= blockDiff[i] && cellsCap[t] - cellsCap[k] < blockDiff[j]) {
+							tmp = cellsCap[k];
+							cellsCap[k] = cellsCap[t];
+							cellsCap[t] = tmp;
+							blockDiff[i] -= cellsCap[k] - cellsCap[t];
+							blockDiff[t] -= cellsCap[t] - cellsCap[k];
+						}
+					}
+				}
+			}
+		}
+
+	cellsCap = sortedVec;
+} 
 };
 
 int main() {
@@ -134,10 +147,9 @@ int main() {
 		vec.push_back(inreversedVec);
 	} */
 
-
 	cells block;
 	block.Cellsfinput("123.txt");
-	block.SPinput(14, 6);
+	block.SPinput(6, 3);
 	block.sortcells();
 	block.Cellsfoutput("1234.txt");
 }
